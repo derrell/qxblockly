@@ -8,6 +8,7 @@
 
 /*
 #ignore(Blockly)
+#ignore(Blockly.Trashcan.prototype)
  */
 
 /**

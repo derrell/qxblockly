@@ -1,0 +1,3 @@
+[submodule "source/resource/upstream"]
+	path = source/resource/upstream
+	url = git@github.com:derrell/Blockly.git
