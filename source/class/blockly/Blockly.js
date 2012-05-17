@@ -8,6 +8,7 @@
 
 /*
 #ignore(Blockly)
+#ignore(Blockly.features)
 #ignore(Blockly.Trashcan.prototype)
  */
 
@@ -37,59 +38,48 @@ qx.Class.define("blockly.Blockly",
     var vBox = new qx.ui.container.Composite(new qx.ui.layout.VBox());
     vBox.set(
       {
-        width : 140
+        width : 200
       });
     this.add(vBox);
 
-    // Only one panel should be open at a time, in each group.
-    var outerGroup = new qx.ui.form.RadioGroup();
-    outerGroup.setAllowEmptySelection(true);
-    var innerGroup = new qx.ui.form.RadioGroup();
-    innerGroup.setAllowEmptySelection(true);
 
-    var outer;
-    var inner;
-    outer = new collapsablepanel.Panel("Hello world");
-    outer.set(
-      {
-        group         : outerGroup,
-        showSeparator : false,
-        layout        : new qx.ui.layout.VBox()
-      });
-    inner = new collapsablepanel.Panel("Colors");
-    inner.set(
-      {
-        group         : innerGroup,
-        showSeparator : false,
-        layout        : new qx.ui.layout.VBox()
-      });
-    inner.add(new qx.ui.basic.Label("Red"));
-    inner.add(new qx.ui.basic.Label("Green"));
-    inner.add(new qx.ui.basic.Label("Blue"));
-    outer.add(inner);
-    vBox.add(outer);
+    var nodes = [];
+    for (var i = 0; i < 2500; i++)
+    {
+      nodes[i] = {name : "Item " + i};
 
-    outer = new collapsablepanel.Panel("Hi there");
-    outer.set(
+      // if its not the root node
+      if (i !== 0)
       {
-        group         : outerGroup,
-        showSeparator : false
-      });
-    vBox.add(outer);
+        // add the children in some random order
+        var node = nodes[parseInt(Math.random() * i)];
 
-    outer = new collapsablepanel.Panel("See ya!");
-    outer.set(
+        if(node.children == null) 
+        {
+          node.children = [];
+        }
+        node.children.push(nodes[i]);
+      }
+    }
+
+    // converts the raw nodes to qooxdoo objects
+    nodes = qx.data.marshal.Json.createModel(nodes, true);
+
+    this.tree =
+      new qx.ui.tree.VirtualTree(nodes.getItem(0), "name", "children");
+    this.tree.set(
       {
-        group         : outerGroup,
-        showSeparator : false
+        font : qx.theme.manager.Font.getInstance().resolve("default"),
+        hideRoot : true,
+        showTopLevelOpenCloseIcons : true
       });
-    vBox.add(outer);
+
+    vBox.add(this.tree, { flex : 1 });
     
     this.editor = new qx.ui.core.Widget();
     this.editor.set(
       {
         width  : 1000,
-//        height : 600,
         appearance : "table"
       });
     this.add(this.editor);
@@ -143,6 +133,8 @@ qx.Class.define("blockly.Blockly",
           qx.util.ResourceManager.getInstance().toUri(
             "upstream/media/trashlid.png");
 
+        // Do not display the SVG toolbox. We have our own.
+        Blockly.features.disableSvgToolbox = true;
         
         // Now start up Blockly.
         Blockly.inject(this.editor.getContentElement().getDomElement());
