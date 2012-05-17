@@ -101,6 +101,16 @@ qx.Class.define("blockly.Blockly",
   {
     __eventsPending : 0,
 
+    /**
+     * Called when all Blockly files have been loaded, and when the user
+     * interface has received its "appear" event. Once both of these have
+     * occurred, Blockly is initialized.
+     * 
+     * @param e {qx.event.type.Data?}
+     *   When present, this is the data from the Blockly loader, which
+     *   contains a 'status' member with value "success" if all files were
+     *   loaded properly, and some other value otherwise.
+     */
     _startBlockly : function(e)
     {
       // Was this a "done" event from the Blockly loader?
