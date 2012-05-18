@@ -174,8 +174,6 @@ qx.Class.define("blockly.Blockly",
           "change",
           function(e)
           {
-            this.debug("Got selection change event");
-
             // Retrieve the selection
             var selection = this.tree.getSelection();
             
@@ -183,13 +181,11 @@ qx.Class.define("blockly.Blockly",
             if (selection.getLength() === 0)
             {
               // Nope, nothing is selected, so we have nothing to do
-              this.debug("No selection available");
               return;
             }
             
             // Get the category of the selected item
             var category = selection.getItem(0).getCategory();
-            this.debug("Handling selection of category " + category);
 
             // Hide any previous flyout that may still be visible
             Blockly.Toolbox.flyout_.hide();
