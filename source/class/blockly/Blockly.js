@@ -44,7 +44,7 @@ qx.Class.define("blockly.Blockly",
     vBox = new qx.ui.container.Composite(new qx.ui.layout.VBox());
     vBox.set(
       {
-        width : 200
+        width : 140
       });
     this.add(vBox);
 
