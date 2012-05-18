@@ -69,10 +69,9 @@ qx.Class.define("blockly.Blockly",
     this.editor = new qx.ui.core.Widget();
     this.editor.set(
       {
-        width  : 1000,
         appearance : "table"
       });
-    this.add(this.editor);
+    this.add(this.editor, { flex : 1 });
     
     // When all of this has appeared, see if we can start Blockly
     this.addListener(
