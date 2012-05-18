@@ -28,17 +28,20 @@ qx.Class.define("blockly.Blockly",
    */
   construct : function() 
   {
+    var             blocklyLoader;
+    var             vBox;
+
     // We will have two parts: a toolbox and the block editor, arranged
     // horizontally.
     this.base(arguments, new qx.ui.layout.HBox());
     
     // Start loading all of the Blockly files
-    var blocklyLoader = blockly.BlocklyLoader.getInstance();
+    blocklyLoader = blockly.BlocklyLoader.getInstance();
     
     // Await notification of completion
     blocklyLoader.addListener("done", this._startBlockly, this);
 
-    var vBox = new qx.ui.container.Composite(new qx.ui.layout.VBox());
+    vBox = new qx.ui.container.Composite(new qx.ui.layout.VBox());
     vBox.set(
       {
         width : 200
@@ -92,6 +95,11 @@ qx.Class.define("blockly.Blockly",
      */
     _startBlockly : function(e)
     {
+      var             nodes;
+      var             root;
+      var             prefixLength;
+      var             category;
+
       // Was this a "done" event from the Blockly loader?
       if (e)
       {
@@ -145,7 +153,7 @@ qx.Class.define("blockly.Blockly",
           this);
 
         // Populate the toolbox tree
-        var nodes = [];
+        nodes = [];
 
         // The root node is not shown
         nodes[0] = 
@@ -154,10 +162,10 @@ qx.Class.define("blockly.Blockly",
             children : []
           };
 
-        var root = nodes[0];
-        var prefixLength = Blockly.Toolbox.PREFIX_.length;
+        root = nodes[0];
+        prefixLength = Blockly.Toolbox.PREFIX_.length;
 
-        for (var category in Blockly.Toolbox.languageTree)
+        for (category in Blockly.Toolbox.languageTree)
         {
           root.children.push(
             {
@@ -174,8 +182,11 @@ qx.Class.define("blockly.Blockly",
           "change",
           function(e)
           {
+            var             selection;
+            var             category;
+
             // Retrieve the selection
-            var selection = this.tree.getSelection();
+            selection = this.tree.getSelection();
             
             // See if anything is selected
             if (selection.getLength() === 0)
@@ -185,7 +196,7 @@ qx.Class.define("blockly.Blockly",
             }
             
             // Get the category of the selected item
-            var category = selection.getItem(0).getCategory();
+            category = selection.getItem(0).getCategory();
 
             // Hide any previous flyout that may still be visible
             Blockly.Toolbox.flyout_.hide();
