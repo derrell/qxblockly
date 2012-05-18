@@ -97,8 +97,12 @@ qx.Class.define("blockly.Blockly",
     {
       var             nodes;
       var             root;
+      var             parent;
       var             prefixLength;
       var             category;
+      var             categoryList;
+      var             categoryDecoded;
+      var             nodeTree;
 
       // Was this a "done" event from the Blockly loader?
       if (e)
@@ -142,13 +146,7 @@ qx.Class.define("blockly.Blockly",
           function()
           {
             Blockly.Toolbox.flyout_.hide();
-
-            if (false)
-            {
-              // disabled until I figure out how to clear the selection without
-              // breaking selection "change" events.
-              this.tree.setSelection(new qx.data.Array());
-            }
+            this.tree.getSelection().removeAll();
           },
           this);
 
@@ -165,13 +163,70 @@ qx.Class.define("blockly.Blockly",
         root = nodes[0];
         prefixLength = Blockly.Toolbox.PREFIX_.length;
 
+        // Initialize the node tree
+        nodeTree = 
+          {
+            "<root>" : 
+            {
+              node     : nodes[0],
+              children : {}
+            }
+          };
+
         for (category in Blockly.Toolbox.languageTree)
         {
-          root.children.push(
+          categoryDecoded = window.decodeURI(category.substring(prefixLength));
+          categoryList = categoryDecoded.split("\0");
+
+          // Start at the root, in search of the specified hierarchy
+          parent = nodeTree["<root>"];
+          
+          categoryList.forEach(
+            function(nodeName, i)
             {
-              name     : window.decodeURI(category.substring(prefixLength)),
-              category : category
-            });
+              var             node; 
+              
+              // Add this name and its node reference to the name hierarchy.
+              // Does a node for this name hierarchy already exist? If so,
+              // there's nothing for us to do.
+              if (! parent.children[nodeName])
+              {
+                // This node does not already exist. Create the new node for
+                // the data model.
+                node =
+                  {
+                    name     : nodeName
+                  };
+
+                // Is this a leaf node?
+                if (i == categoryList.length - 1)
+                {
+                  // Yup. Add the category.
+                  node.category = category;
+                }
+                else
+                {
+                  // It's a branch node. Add a children array.
+                  node.children = [];
+                }
+
+                // Add this new node.
+                parent.node.children.push(node);
+
+                // Keep track of the hierarchy in an efficient fashion, and
+                // advance to the new child node.
+                parent = parent.children[nodeName] =
+                  {
+                    node     : node,
+                    children : []
+                  };
+              }
+              else
+              {
+                parent = parent.children[nodeName];
+              }
+            },
+            this);
         }
 
         // converts the raw nodes to qooxdoo objects
@@ -195,12 +250,30 @@ qx.Class.define("blockly.Blockly",
               return;
             }
             
-            // Get the category of the selected item
-            category = selection.getItem(0).getCategory();
-
             // Hide any previous flyout that may still be visible
             Blockly.Toolbox.flyout_.hide();
 
+            // Is this a leaf node with a category?
+            if (! selection.getItem(0).getCategory)
+            {
+              // Nope. Deselect it. (Doesn't work if not delayed a bit.)
+              qx.util.TimerManager.getInstance().start(
+                function()
+                {
+                  selection.removeAll();
+                },
+                0,
+                this,
+                null,
+                10);
+              
+              // No more to do.
+              return;
+            }
+
+            // Get the category of the selected item
+            category = selection.getItem(0).getCategory();
+            
             // Display the flyout associated with the selected category.
             var blockSet = Blockly.Toolbox.languageTree[category] || category;
             Blockly.Toolbox.flyout_.show(blockSet);
