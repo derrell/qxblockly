@@ -53,7 +53,15 @@ qx.Class.define("blockly.Blockly",
       {
         font : qx.theme.manager.Font.getInstance().resolve("default"),
         hideRoot : true,
-        showTopLevelOpenCloseIcons : true
+        showTopLevelOpenCloseIcons : true,
+        delegate :
+        {
+          configureItem : function(item)
+          {
+            // Use small (16px) icons instead of the standard (22px) ones.
+            item.addState("small");
+          }
+        }
       });
 
     vBox.add(this.tree, { flex : 1 });
