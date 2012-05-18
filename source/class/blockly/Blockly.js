@@ -9,6 +9,9 @@
 /*
 #ignore(Blockly)
 #ignore(Blockly.features)
+#ignore(Blockly.Toolbox)
+#ignore(Blockly.Toolbox.PREFIX_)
+#ignore(Blockly.Toolbox.flyout_)
 #ignore(Blockly.Trashcan.prototype)
  */
 
@@ -42,31 +45,7 @@ qx.Class.define("blockly.Blockly",
       });
     this.add(vBox);
 
-
-    var nodes = [];
-    for (var i = 0; i < 2500; i++)
-    {
-      nodes[i] = {name : "Item " + i};
-
-      // if its not the root node
-      if (i !== 0)
-      {
-        // add the children in some random order
-        var node = nodes[parseInt(Math.random() * i)];
-
-        if(node.children == null) 
-        {
-          node.children = [];
-        }
-        node.children.push(nodes[i]);
-      }
-    }
-
-    // converts the raw nodes to qooxdoo objects
-    nodes = qx.data.marshal.Json.createModel(nodes, true);
-
-    this.tree =
-      new qx.ui.tree.VirtualTree(nodes.getItem(0), "name", "children");
+    this.tree = new qx.ui.tree.VirtualTree(null, "name", "children");
     this.tree.set(
       {
         font : qx.theme.manager.Font.getInstance().resolve("default"),
@@ -148,6 +127,80 @@ qx.Class.define("blockly.Blockly",
         
         // Now start up Blockly.
         Blockly.inject(this.editor.getContentElement().getDomElement());
+        
+        // Override the toolbox's clearSelection method to remove the
+        // selection from our tree instead of from the SVG (internal) tree.
+        Blockly.Toolbox.clearSelection = qx.lang.Function.bind(
+          function()
+          {
+            Blockly.Toolbox.flyout_.hide();
+
+            if (false)
+            {
+              // disabled until I figure out how to clear the selection without
+              // breaking selection "change" events.
+              this.tree.setSelection(new qx.data.Array());
+            }
+          },
+          this);
+
+        // Populate the toolbox tree
+        var nodes = [];
+
+        // The root node is not shown
+        nodes[0] = 
+          {
+            name     : "<root>",
+            children : []
+          };
+
+        var root = nodes[0];
+        var prefixLength = Blockly.Toolbox.PREFIX_.length;
+
+        for (var category in Blockly.Toolbox.languageTree)
+        {
+          root.children.push(
+            {
+              name     : window.decodeURI(category.substring(prefixLength)),
+              category : category
+            });
+        }
+
+        // converts the raw nodes to qooxdoo objects
+        nodes = qx.data.marshal.Json.createModel(nodes, true);
+
+        // Create a listener for when the selection changes
+        this.tree.getSelection().addListener(
+          "change",
+          function(e)
+          {
+            this.debug("Got selection change event");
+
+            // Retrieve the selection
+            var selection = this.tree.getSelection();
+            
+            // See if anything is selected
+            if (selection.getLength() === 0)
+            {
+              // Nope, nothing is selected, so we have nothing to do
+              this.debug("No selection available");
+              return;
+            }
+            
+            // Get the category of the selected item
+            var category = selection.getItem(0).getCategory();
+            this.debug("Handling selection of category " + category);
+
+            // Hide any previous flyout that may still be visible
+            Blockly.Toolbox.flyout_.hide();
+
+            // Display the flyout associated with the selected category.
+            var blockSet = Blockly.Toolbox.languageTree[category] || category;
+            Blockly.Toolbox.flyout_.show(blockSet);
+          },
+          this);
+
+        this.tree.setModel(nodes.getItem(0));
       }
     }
   }
