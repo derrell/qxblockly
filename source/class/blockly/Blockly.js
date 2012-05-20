@@ -147,6 +147,20 @@ qx.Class.define("blockly.Blockly",
         // Now start up Blockly.
         Blockly.inject(this.editor.getContentElement().getDomElement());
         
+        // Resize the blocks editor when its container resizes.
+        this.editor.addListener(
+          "resize",
+          function(e)
+          {
+            // Delay momentarily, so container size has actually changed
+            qx.util.TimerManager.getInstance().start(
+              function(e)
+              {
+                Blockly.fireUiEvent(Blockly.svgDoc, window, 'resize');
+              });
+          },
+          this);
+
         // Override the toolbox's clearSelection method to remove the
         // selection from our tree instead of from the SVG (internal) tree.
         Blockly.Toolbox.clearSelection = qx.lang.Function.bind(
