@@ -10,6 +10,7 @@
 #ignore(Blockly)
 #ignore(Blockly.features)
 #ignore(Blockly.Toolbox)
+#ignore(Blockly.Generator)
 #ignore(Blockly.Toolbox.PREFIX_)
 #ignore(Blockly.Toolbox.flyout_)
 #ignore(Blockly.Trashcan.prototype)
