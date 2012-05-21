@@ -303,6 +303,11 @@ qx.Class.define("blockly.Blockly",
 
         this.tree.setModel(nodes.getItem(0));
       }
+    },
+    
+    toJavaScript : function()
+    {
+      return Blockly.Generator.workspaceToCode('JavaScript');      
     }
   }
 });
