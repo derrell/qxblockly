@@ -9,6 +9,8 @@
 /*
 #ignore(Blockly)
 #ignore(Blockly.features)
+#ignore(Blockly.Xml)
+#ignore(Blockly.Connection.prototype)
 #ignore(Blockly.Toolbox)
 #ignore(Blockly.Generator)
 #ignore(Blockly.Toolbox.PREFIX_)
@@ -34,8 +36,11 @@ qx.Class.define("blockly.Blockly",
    *   (should) also be a <i>generators</i> map which contains one member for
    *   each output language supported. The value of that that member should be
    *   the function for generating code in that language.
+   *
+   * @param onConnection {Function?}
+   *   Function to call when a block connection is established.
    */
-  construct : function(blocks)
+  construct : function(blocks, onConnection)
   {
     var             blocklyLoader;
     var             vBox;
@@ -46,6 +51,9 @@ qx.Class.define("blockly.Blockly",
     
     // Save the blocks map. We'll use it after Blockly is loaded.
     this.__blocks = blocks || {};
+
+    // Save the onConnection function
+    this.__onConnection = onConnection;
 
     // Start loading all of the Blockly files
     blocklyLoader = blockly.BlocklyLoader.getInstance();
@@ -144,6 +152,7 @@ qx.Class.define("blockly.Blockly",
      */
     _lockedAndLoaded : function()
     {
+      var             _this = this;
       var             nodes;
       var             root;
       var             parent;
@@ -218,6 +227,35 @@ qx.Class.define("blockly.Blockly",
             });
         },
         this);
+
+      // Override the block connect() method, so we can send a message
+      // whenever a connection is established.
+      (function()
+       {
+         var oldConnect = Blockly.Connection.prototype.connect;
+         Blockly.Connection.prototype.connect = function(otherConnection)
+         {
+           var             xml;
+
+           // Call the old connect function
+           oldConnect.call(this, otherConnection);
+
+           // If we've been given a onConnection function...
+           if (_this.__onConnection)
+           {
+             // ... then retrieve the current block layout, ...
+             xml = Blockly.Xml.domToText(
+               Blockly.Xml.workspaceToDom(Blockly.mainWorkspace));
+
+             // ... and call the onConnection function!
+             _this.__onConnection(
+               {
+                 xml        : xml,
+                 javaScript : _this.toJavaScript()
+               });
+           }
+         };
+       })();
 
       // Override the toolbox's clearSelection method to remove the
       // selection from our tree instead of from the SVG (internal) tree.
