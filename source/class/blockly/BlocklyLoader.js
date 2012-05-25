@@ -29,7 +29,7 @@ qx.Class.define("blockly.BlocklyLoader",
       [
         "blockly.js",
         "block.js",
-        "blockSvg.js",
+        "block_svg.js",
         "comment.js",
         "connection.js",
         "contextmenu.js",
