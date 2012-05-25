@@ -250,8 +250,8 @@ qx.Class.define("blockly.Blockly",
              // ... and call the onConnection function!
              _this.__onConnection(
                {
-                 xml        : xml,
-                 javaScript : _this.toJavaScript()
+                 xml        : xml
+//                 javaScript : _this.toJavaScript()
                });
            }
          };
