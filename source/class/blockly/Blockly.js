@@ -52,7 +52,7 @@ qx.Class.define("blockly.Blockly",
     // Save the blocks map. We'll use it after Blockly is loaded.
     this.__blocks = blocks || {};
 
-    // Save the onConnection function
+    // Similarly, save the onConnection function
     this.__onConnection = onConnection;
 
     // Start loading all of the Blockly files
@@ -229,33 +229,33 @@ qx.Class.define("blockly.Blockly",
         this);
 
       // Override the block connect() method, so we can send a message
-      // whenever a connection is established.
-      (function()
-       {
-         var oldConnect = Blockly.Connection.prototype.connect;
-         Blockly.Connection.prototype.connect = function(otherConnection)
+      // whenever a connection is established. (Only do this if we've been
+      // given an onConnection function.)
+      if (this.__onConnection)
+      {
+        (function()
          {
-           var             xml;
-
-           // Call the old connect function
-           oldConnect.call(this, otherConnection);
-
-           // If we've been given a onConnection function...
-           if (_this.__onConnection)
+           var oldConnect = Blockly.Connection.prototype.connect;
+           Blockly.Connection.prototype.connect = function(otherConnection)
            {
-             // ... then retrieve the current block layout, ...
+             var             xml;
+
+             // Call the old connect function
+             oldConnect.call(this, otherConnection);
+
+             // Retrieve the current block layout
              xml = Blockly.Xml.domToText(
                Blockly.Xml.workspaceToDom(Blockly.mainWorkspace));
 
-             // ... and call the onConnection function!
+             // Call the provided onConnection function
              _this.__onConnection(
                {
                  xml        : xml
 //                 javaScript : _this.toJavaScript()
                });
-           }
-         };
-       })();
+           };
+         })();
+      }
 
       // Override the toolbox's clearSelection method to remove the
       // selection from our tree instead of from the SVG (internal) tree.
