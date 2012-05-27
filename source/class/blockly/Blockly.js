@@ -36,11 +36,8 @@ qx.Class.define("blockly.Blockly",
    *   (should) also be a <i>generators</i> map which contains one member for
    *   each output language supported. The value of that that member should be
    *   the function for generating code in that language.
-   *
-   * @param onConnection {Function?}
-   *   Function to call when a block connection is established.
    */
-  construct : function(blocks, onConnection)
+  construct : function(blocks)
   {
     var             blocklyLoader;
     var             vBox;
@@ -51,9 +48,6 @@ qx.Class.define("blockly.Blockly",
     
     // Save the blocks map. We'll use it after Blockly is loaded.
     this.__blocks = blocks || {};
-
-    // Similarly, save the onConnection function
-    this.__onConnection = onConnection;
 
     // Start loading all of the Blockly files
     blocklyLoader = blockly.BlocklyLoader.getInstance();
@@ -211,6 +205,9 @@ qx.Class.define("blockly.Blockly",
         }
       }
 
+      // For now, our publish function is a debugging one
+      Blockly.publish = qx.dev.Debug.debugObject;
+
       // Now start up Blockly.
       Blockly.inject(this.editor.getContentElement().getDomElement());
 
@@ -227,35 +224,6 @@ qx.Class.define("blockly.Blockly",
             });
         },
         this);
-
-      // Override the block connect() method, so we can send a message
-      // whenever a connection is established. (Only do this if we've been
-      // given an onConnection function.)
-      if (this.__onConnection)
-      {
-        (function()
-         {
-           var oldConnect = Blockly.Connection.prototype.connect;
-           Blockly.Connection.prototype.connect = function(otherConnection)
-           {
-             var             xml;
-
-             // Call the old connect function
-             oldConnect.call(this, otherConnection);
-
-             // Retrieve the current block layout
-             xml = Blockly.Xml.domToText(
-               Blockly.Xml.workspaceToDom(Blockly.mainWorkspace));
-
-             // Call the provided onConnection function
-             _this.__onConnection(
-               {
-                 xml        : xml
-//                 javaScript : _this.toJavaScript()
-               });
-           };
-         })();
-      }
 
       // Override the toolbox's clearSelection method to remove the
       // selection from our tree instead of from the SVG (internal) tree.
@@ -415,5 +383,70 @@ qx.Class.define("blockly.Blockly",
     {
       return Blockly.Generator.workspaceToCode('JavaScript');      
     }
+    
+    /**
+     * Encode a block and optionally its subtree as a JavaScript map
+     * 
+     * @param block {Blockly.Block}
+     *  The root block to encode.
+     * 
+     * @param bIncludeSubtree {Boolean}
+     *   Whether to encode the block's subtree too.
+     *   NOTE: This feature is not yet implemented.
+     * 
+     * @return {Map}
+     *  The block, and (future) optionally its subtree, encoded as a map.
+     */
+/*
+    blockToMap : function(block, bIncludeSubtree)
+    {
+      var             i;
+      var             xy;
+      var             hw;
+      var             title;
+      var             input;
+      var             bValueInputs;
+      var             childBlock;
+      var             ret = {};
+      
+      ret.type = block.type;
+
+      if (block.id) 
+      {
+        // Add the block id
+        ret.id = block.id;
+      }
+      
+      if (block.mutationToMap)
+      {
+        // Custom data for an advanced block.
+        ret.mutation = block.mutationToMap();
+      }
+
+      ret.title = [];
+      for (i = 0; title = block.titleRow[i]; i++) 
+      {
+        ret.title.push(title.getText());
+      }
+
+      if (block.comment) 
+      {
+        xy = block.comment.getBubbleLocation();
+        hw = block.comment.getBubbleSize();
+
+        ret.comment = 
+          {
+            text : block.comment.getText(),
+            pinned : block.comment.isPinned(),
+            x      : xy.x,
+            y      : xy.y,
+            h      : hw.height,
+            w      : hw.width
+          };
+      }
+      
+      return ret;
+    }
+*/
   }
 });
