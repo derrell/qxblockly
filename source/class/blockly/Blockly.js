@@ -3,7 +3,6 @@
  * 
  * License:
  *   LGPL: http://www.gnu.org/licenses/lgpl.html 
- *   EPL : http://www.eclipse.org/org/documents/epl-v10.php
  */
 
 /*
@@ -30,7 +29,7 @@ qx.Class.define("blockly.Blockly",
    * Create the Blockly widget
    *
    * @param blocks {Map}
-   *   Map, where each key is an member added to Blockly.Language, and the
+   *   Map, where each key is a member added to Blockly.Language, and the
    *   value is itself a map, in the format required by Blockly.Language. In
    *   addition to those elements of the map required by Blockly, there may
    *   (should) also be a <i>generators</i> map which contains one member for
@@ -46,11 +45,9 @@ qx.Class.define("blockly.Blockly",
     // horizontally.
     this.base(arguments, new qx.ui.layout.HBox());
     
-    // Save the blocks map. We'll use it after Blockly is loaded.
-    this.__blocks = blocks || {};
-
-    // Start loading all of the Blockly files
-    blocklyLoader = blockly.BlocklyLoader.getInstance();
+    // Start loading all of the Blockly files, and then language blocks when
+    // Blockly files are fully loaded.
+    blocklyLoader = new blockly.BlocklyLoader(blocks);
     
     // Await notification of completion
     blocklyLoader.addListener("done", this._startBlockly, this);
@@ -88,7 +85,7 @@ qx.Class.define("blockly.Blockly",
     this.add(this.editor, { flex : 1 });
     
     // When all of this has appeared, see if we can start Blockly
-    this.addListener(
+    this.addListenerOnce(
       "appear",
       function(e)
       {
@@ -174,36 +171,6 @@ qx.Class.define("blockly.Blockly",
 
       // Do not display the SVG toolbox. We have our own.
       Blockly.features.disableSvgToolbox = true;
-
-      // Were any languages loaded along with Blockly?
-      if (! Blockly.Language)
-      {
-        // Nope. Initialize the language map.
-        Blockly.Language = {};
-      }
-      
-      // Add any language components provided to our constructor.
-      for (blockName in this.__blocks)
-      {
-        // Reference the block to be saved
-        block = this.__blocks[blockName];
-
-        // Save this block description
-        Blockly.Language[blockName] = block;
-        
-        // If there's a map of output language generation functions...
-        if (block.generators)
-        {
-          for (language in block.generators)
-          {
-            // Create or retrieve this language's map from within Blockly
-            Blockly[language] = Blockly.Generator.get(language);
-            
-            // Save the language generator for this language, for this block
-            Blockly[language][blockName] = block.generators[language];
-          }
-        }
-      }
 
       // For now, our publish function is a debugging one
       Blockly.publish = qx.dev.Debug.debugObject;
