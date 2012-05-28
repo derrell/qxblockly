@@ -3,12 +3,12 @@
  * 
  * License:
  *   LGPL: http://www.gnu.org/licenses/lgpl.html 
- *   EPL : http://www.eclipse.org/org/documents/epl-v10.php
  */
 
 /*
 #asset(upstream/*)
 #ignore(Blockly)
+#ignore(Blockly.Generator)
 */
 
 /**
@@ -17,12 +17,25 @@
 qx.Class.define("blockly.BlocklyLoader",
 {
   extend : scriptlistloader.Loader,
-  type   : "singleton",
 
-  construct : function()
+  /**
+   * Load Blockly.
+   * 
+   * @param blocks {Map?}
+   *   Map, where each key is a member added to Blockly.Language, and the
+   *   value is itself a map, in the format required by Blockly.Language. In
+   *   addition to those elements of the map required by Blockly, there may
+   *   (should) also be a <i>generators</i> map which contains one member for
+   *   each output language supported. The value of that that member should be
+   *   the function for generating code in that language.
+   */
+  construct : function(blocks)
   {
     var             jsFiles = null;
     var             cssFiles = null;
+
+    // Save the blocks map so it can be added after Blockly is loaded
+    this.__blocks = blocks || {};
 
     // List the JavaScript files to be included
     jsFiles =
@@ -104,7 +117,6 @@ qx.Class.define("blockly.BlocklyLoader",
       // Ensure that all files loaded properly
       if (failures.length > 0)
       {
-        
         // Let listeners know we're fully loaded
         this.fireDataEvent(
           "done",
@@ -115,12 +127,63 @@ qx.Class.define("blockly.BlocklyLoader",
       }
       else
       {
+        // Were any languages loaded along with Blockly?
+        if (! Blockly.Language)
+        {
+          // Nope. Initialize the language map.
+          Blockly.Language = {};
+        }
+
+        // Load any language blocks we were given
+        this._addLanguageBlocks(this.__blocks);
+
         // Let listeners know we're fully loaded
         this.fireDataEvent(
           "done",
           {
             status : "success"
           });
+      }
+    },
+    
+    /**
+     * Add a set of language block definitions.
+     * 
+     * @param blocks {Map}
+     *   Map, where each key is a member added to Blockly.Language, and the
+     *   value is itself a map, in the format required by Blockly.Language. In
+     *   addition to those elements of the map required by Blockly, there may
+     *   (should) also be a <i>generators</i> map which contains one member for
+     *   each output language supported. The value of that that member should be
+     *   the function for generating code in that language.
+     */
+    _addLanguageBlocks : function(blocks)
+    {
+      var             block;
+      var             blockName;
+      var             language;
+
+      // Add the provided language components
+      for (blockName in blocks)
+      {
+        // Reference the block to be saved
+        block = blocks[blockName];
+
+        // Save this block description
+        Blockly.Language[blockName] = block;
+        
+        // If there's a map of output language generation functions...
+        if (block.generators)
+        {
+          for (language in block.generators)
+          {
+            // Create or retrieve this language's map from within Blockly
+            Blockly[language] = Blockly.Generator.get(language);
+            
+            // Save the language generator for this language, for this block
+            Blockly[language][blockName] = block.generators[language];
+          }
+        }
       }
     }
   }
