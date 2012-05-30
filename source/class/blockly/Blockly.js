@@ -35,8 +35,14 @@ qx.Class.define("blockly.Blockly",
    *   (should) also be a <i>generators</i> map which contains one member for
    *   each output language supported. The value of that that member should be
    *   the function for generating code in that language.
+   *
+   * @param fPublish {Function}
+   *   Function which is to be called for each significant event in Blockly
+   *   operation: addition of blocks to the workspace, block movement, block
+   *   connection, etc. The function is called with two parameters: a message
+   *   (Map), and a message type (String).
    */
-  construct : function(blocks)
+  construct : function(blocks, fPublish)
   {
     var             blocklyLoader;
     var             vBox;
@@ -45,6 +51,9 @@ qx.Class.define("blockly.Blockly",
     // horizontally.
     this.base(arguments, new qx.ui.layout.HBox());
     
+    // Save the publish function to assign after Blockly is loaded
+    this.__fPublish = fPublish;
+
     // Start loading all of the Blockly files, and then language blocks when
     // Blockly files are fully loaded.
     blocklyLoader = new blockly.BlocklyLoader(blocks);
@@ -132,7 +141,7 @@ qx.Class.define("blockly.Blockly",
       // Have we received all that we expect?
       if (this.__eventsPending == 0)
       {
-        // Yup. Blockly is read
+        // Yup. Blockly is ready
         this._lockedAndLoaded();
       }
     },
@@ -173,7 +182,7 @@ qx.Class.define("blockly.Blockly",
       Blockly.features.disableSvgToolbox = true;
 
       // For now, our publish function is a debugging one
-      Blockly.publish = qx.dev.Debug.debugObject;
+      Blockly.publish = this.__fPublish;
 
       // Now start up Blockly.
       Blockly.inject(this.editor.getContentElement().getDomElement());
@@ -350,70 +359,5 @@ qx.Class.define("blockly.Blockly",
     {
       return Blockly.Generator.workspaceToCode('JavaScript');      
     }
-    
-    /**
-     * Encode a block and optionally its subtree as a JavaScript map
-     * 
-     * @param block {Blockly.Block}
-     *  The root block to encode.
-     * 
-     * @param bIncludeSubtree {Boolean}
-     *   Whether to encode the block's subtree too.
-     *   NOTE: This feature is not yet implemented.
-     * 
-     * @return {Map}
-     *  The block, and (future) optionally its subtree, encoded as a map.
-     */
-/*
-    blockToMap : function(block, bIncludeSubtree)
-    {
-      var             i;
-      var             xy;
-      var             hw;
-      var             title;
-      var             input;
-      var             bValueInputs;
-      var             childBlock;
-      var             ret = {};
-      
-      ret.type = block.type;
-
-      if (block.id) 
-      {
-        // Add the block id
-        ret.id = block.id;
-      }
-      
-      if (block.mutationToMap)
-      {
-        // Custom data for an advanced block.
-        ret.mutation = block.mutationToMap();
-      }
-
-      ret.title = [];
-      for (i = 0; title = block.titleRow[i]; i++) 
-      {
-        ret.title.push(title.getText());
-      }
-
-      if (block.comment) 
-      {
-        xy = block.comment.getBubbleLocation();
-        hw = block.comment.getBubbleSize();
-
-        ret.comment = 
-          {
-            text : block.comment.getText(),
-            pinned : block.comment.isPinned(),
-            x      : xy.x,
-            y      : xy.y,
-            h      : hw.height,
-            w      : hw.width
-          };
-      }
-      
-      return ret;
-    }
-*/
   }
 });
