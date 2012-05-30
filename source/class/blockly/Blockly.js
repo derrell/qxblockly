@@ -357,7 +357,7 @@ qx.Class.define("blockly.Blockly",
      */
     toJavaScript : function()
     {
-      return Blockly.Generator.workspaceToCode('JavaScript');      
+      return Blockly.Generator.workspaceToCode('JavaScript');
     }
   }
 });
